@@ -1,4 +1,4 @@
 pytest
-requests
 allure-pytest
-Faker
+playwright
+pytest-playwright

@@ -1,49 +1,46 @@
+import json
 import pytest
-from utils.api_client import APIClient
-import random
-from datetime import date, timedelta
-from faker import Faker
+from pathlib import Path
+from pages.login_page import LoginPage
+from pages.dashboard_page import DashboardPage
 
-faker = Faker()
-BASE_URL = "https://restful-booker.herokuapp.com"
+CONFIG_PATH = Path(__file__).resolve().parent.parent / "orangehrm_playwright" / "config" / "creds.json"
 
 
 @pytest.fixture(scope="session")
-def client():
-    return APIClient(BASE_URL)
+def credentials():
+    with open(CONFIG_PATH) as f:
+        creds = json.load(f)
+    assert "username" in creds and "password" in creds
+    return creds
 
 
 @pytest.fixture(scope="session")
-def token(client):
-    return client.auth("admin", "password123")
+def storage_state(tmp_path_factory, credentials, browser, request):
+    browser_name = request.config.getoption("--browser")
+    state_file = tmp_path_factory.mktemp("state") / f"{browser_name}-state.json"
+    context = browser.new_context()
+    page = context.new_page()
+    login = LoginPage(page)
+    login.goto()
+    login.login(credentials["username"], credentials["password"])
+    context.storage_state(path=state_file)
+    context.close()
 
-
-def generate_booking_payload() -> dict:
-    firstname = faker.first_name()
-    lastname = faker.last_name()
-    totalprice = random.randint(50, 500)
-    depositpaid = random.choice([True, False])
-    checkin = date.today().isoformat()
-    checkout = (date.today() + timedelta(days=2)).isoformat()
-
-    return {
-        "firstname": firstname,
-        "lastname": lastname,
-        "totalprice": totalprice,
-        "depositpaid": depositpaid,
-        "bookingdates": {
-            "checkin": checkin,
-            "checkout": checkout
-        }
-    }
+    return state_file
 
 
 @pytest.fixture
-def booking_payload() -> dict:
-    return generate_booking_payload()
+def page_with_auth(browser, storage_state):
+    context = browser.new_context(storage_state=str(storage_state))
+    pages = context.pages
+    page = pages[0] if pages else context.new_page()
+    page.goto(LoginPage.URL)
+    page.wait_for_selector("xpath=//aside")
+    yield page
+    context.close()
 
 
 @pytest.fixture
-def booking(client, booking_payload):
-    resp = client.create(booking_payload)
-    return resp["bookingid"], booking_payload
+def dashboard(page_with_auth):
+    return DashboardPage(page_with_auth)
