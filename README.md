@@ -80,7 +80,6 @@ restful-booker-tests/
 │   ├── test_create.py         # Create booking tests
 │   ├── test_partial_update.py # Partial update tests
 │   ├── test_get_booking.py    # Get booking tests
-│   └── test_cleanup.py        # (Optional) cleanup / delete tests
 ├── utils/
 │   └── api_client.py          # HTTP client for Restful Booker API
 ├── conftest.py                # Pytest fixtures
