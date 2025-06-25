@@ -6,9 +6,9 @@ class LoginPage:
 
     def __init__(self, page: Page):
         self.page = page
-        self.username = page.locator("xpath=//input[@name='username']")
-        self.password = page.locator("xpath=//input[@name='password']")
-        self.submit = page.locator("xpath=//button[@type='submit']")
+        self.username = page.get_by_placeholder("Username")
+        self.password = page.get_by_placeholder("Password")
+        self.login_btn = page.get_by_role("button", name="Login")
 
     def goto(self):
         self.page.goto(self.URL)
@@ -16,5 +16,5 @@ class LoginPage:
     def login(self, user: str, pwd: str):
         self.username.fill(user)
         self.password.fill(pwd)
-        self.submit.click()
-        self.page.wait_for_selector("xpath=//aside")
+        self.login_btn.click()
+        self.page.wait_for_selector("aside nav")

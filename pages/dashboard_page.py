@@ -6,13 +6,13 @@ class DashboardPage:
         self.page = page
 
     def click_panel(self, panel: str):
-        self.page.locator(f"xpath=//span[text()='{panel}']").click()
-        self.page.wait_for_selector("xpath=//h6[contains(@class,'oxd-text--h6')]")
+        self.page.get_by_role("link", name=panel).click()
+        self.page.wait_for_selector("h6.oxd-text--h6")
 
     def get_header(self) -> str:
         return (
             self.page
-            .locator("xpath=(//h6[contains(@class,'oxd-text--h6')])[last()]")
-            .inner_text()
-            .strip()
+                .locator("h6.oxd-text--h6:last-of-type")
+                .inner_text()
+                .strip()
         )
